@@ -10,6 +10,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
 using System.Threading.Tasks;
+using Tweetbook.Contracts.Contracts.V1.Responses;
 using Tweetbook.Contracts.V1;
 using Tweetbook.Contracts.V1.Requests;
 using Tweetbook.Contracts.V1.Responses;
@@ -45,10 +46,10 @@ namespace Tweetbook.IntegrationTests
             HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("bearer", await GetJwtToken());
         }
 
-        protected async Task<CreatePostResponse> CreatePostAsync(CreatePostRequest request)
+        protected async Task<Response<CreatePostResponse>> CreatePostAsync(CreatePostRequest request)
         {
             var response = await HttpClient.PostAsJsonAsync(ApiRoutes.Posts.Create, request);
-            return await response.Content.ReadFromJsonAsync<CreatePostResponse>();
+            return await response.Content.ReadFromJsonAsync<Response<CreatePostResponse>>();
         }
 
         private async Task<string> GetJwtToken()

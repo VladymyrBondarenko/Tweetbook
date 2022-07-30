@@ -6,6 +6,7 @@ using Microsoft.OpenApi.Models;
 using System.Text;
 using Tweetbook.Filters;
 using Tweetbook.Options;
+using Tweetbook.Services;
 
 namespace Tweetbook.Installers
 {
@@ -48,6 +49,13 @@ namespace Tweetbook.Installers
             {
                 option.SaveToken = true;
                 option.TokenValidationParameters = tokenParams;
+            });
+
+            services.AddScoped<IUriService, UriService>(provider => 
+            {
+                var accessor = provider.GetRequiredService<IHttpContextAccessor>();
+                var request = accessor.HttpContext.Request;
+                return new UriService($"{request.Scheme}://{request.Host.ToUriComponent()}");
             });
         }
     }

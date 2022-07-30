@@ -5,6 +5,7 @@ using System.Net.Http.Json;
 using System.Threading.Tasks;
 using Tweetbook.Contracts.V1;
 using Tweetbook.Contracts.V1.Requests;
+using Tweetbook.Contracts.Contracts.V1.Responses;
 using Tweetbook.Contracts.V1.Responses;
 using Tweetbook.Domain;
 using Xunit;
@@ -24,7 +25,8 @@ namespace Tweetbook.IntegrationTests.ControllerTests
 
             // Assert
             response.StatusCode.Should().Be(HttpStatusCode.OK);
-            (await response.Content.ReadFromJsonAsync<List<Post>>()).Should().BeEmpty();
+            var pagedResponse = (await response.Content.ReadFromJsonAsync<PagedResponse<GetPostResponse>>());
+            pagedResponse.Should().NotBeNull();
         }
 
         [Fact]
@@ -36,14 +38,14 @@ namespace Tweetbook.IntegrationTests.ControllerTests
                 new CreatePostRequest { Name = "Post 1", Tags = new List<CreateTagRequest> { new CreateTagRequest { Name = "Tag 1" } }  });
 
             // Act
-            var response = await HttpClient.GetAsync(ApiRoutes.Posts.Get.Replace("{postId}", createdPost.Id.ToString()));
+            var response = await HttpClient.GetAsync(ApiRoutes.Posts.Get.Replace("{postId}", createdPost.Data.Id.ToString()));
 
             // Assert
             response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-            var post = await response.Content.ReadFromJsonAsync<Post>();
-            post.Id.Should().Be(createdPost.Id);
-            post.Name.Should().Be(createdPost.Name);
+            var post = await response.Content.ReadFromJsonAsync<Response<GetPostResponse>>();
+            post.Data.Id.Should().Be(createdPost.Data.Id);
+            post.Data.Name.Should().Be(createdPost.Data.Name);
         }
 
         [Fact]
@@ -57,7 +59,7 @@ namespace Tweetbook.IntegrationTests.ControllerTests
             // Act
             var postToUpdate = new UpdatePostRequest
             {
-                Id = createdPost.Id,
+                Id = createdPost.Data.Id,
                 Name = "Post 2"
             };
             var response = await HttpClient.PutAsJsonAsync(ApiRoutes.Posts.Update, postToUpdate);
@@ -65,9 +67,9 @@ namespace Tweetbook.IntegrationTests.ControllerTests
             // Assert
             response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-            var post = await response.Content.ReadFromJsonAsync<UpdatePostSuccessResponse>();
-            post.Id.Should().Be(postToUpdate.Id);
-            post.Name.Should().Be(postToUpdate.Name);
+            var post = await response.Content.ReadFromJsonAsync<Response<UpdatePostSuccessResponse>>();
+            post.Data.Id.Should().Be(postToUpdate.Id);
+            post.Data.Name.Should().Be(postToUpdate.Name);
         }
 
         [Fact]
@@ -79,7 +81,7 @@ namespace Tweetbook.IntegrationTests.ControllerTests
                 new CreatePostRequest { Name = "Post 1", Tags = new List<CreateTagRequest> { new CreateTagRequest { Name = "Tag 1" } } });
 
             // Act
-            var response = await HttpClient.GetAsync(ApiRoutes.Posts.Delete.Replace("{postId}", createdPost.Id.ToString()));
+            var response = await HttpClient.GetAsync(ApiRoutes.Posts.Delete.Replace("{postId}", createdPost.Data.Id.ToString()));
 
             // Assert
             response.StatusCode.Should().Be(HttpStatusCode.OK);

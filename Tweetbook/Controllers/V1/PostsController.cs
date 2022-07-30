@@ -4,34 +4,43 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Tweetbook.Cache;
+using Tweetbook.Contracts.Contracts.V1.Requests;
+using Tweetbook.Contracts.Contracts.V1.Responses;
 using Tweetbook.Contracts.V1;
 using Tweetbook.Contracts.V1.Requests;
 using Tweetbook.Contracts.V1.Responses;
 using Tweetbook.Domain;
 using Tweetbook.Extensions;
+using Tweetbook.Helpers;
 using Tweetbook.Services;
 
 namespace Tweetbook.Controllers.V1
 {
     [ApiController]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class PostsController : ControllerBase
     {
         private readonly IPostService _postService;
         private readonly IMapper _mapper;
+        private readonly IUriService _uriService;
 
-        public PostsController(IPostService postService, IPostTagService postTagService,
-            IMapper mapper)
+        public PostsController(IPostService postService, IMapper mapper, IUriService uriService)
         {
             _postService = postService;
             _mapper = mapper;
+            _uriService = uriService;
         }
 
         [HttpGet(ApiRoutes.Posts.GetAll)]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery] PaginationQueryRequest paginationQuery)
         {
-            var posts = await _postService.GetAllAsync();
-            return Ok(_mapper.Map<List<GetPostResponse>>(posts));
+            var paginationFilter = _mapper.Map<PaginationQuery>(paginationQuery);
+            var posts = await _postService.GetAllAsync(paginationFilter);
+
+            var pagedResponse = PaginationHelpers
+                .CreatePaginatedResponse(_uriService, paginationFilter, _mapper.Map<List<GetPostResponse>>(posts));
+
+            return Ok(pagedResponse);
         }
 
         [HttpGet(ApiRoutes.Posts.Get)]
@@ -39,7 +48,7 @@ namespace Tweetbook.Controllers.V1
         public async Task<IActionResult> GetById(Guid postId)
         {
             var post = await _postService.GetAsync(postId);
-            return Ok(_mapper.Map<GetPostResponse>(post));
+            return Ok(new Response<GetPostResponse>(_mapper.Map<GetPostResponse>(post)));
         }
 
         /// <summary>
@@ -76,8 +85,9 @@ namespace Tweetbook.Controllers.V1
             }
 
             var postResponse = _mapper.Map<CreatePostResponse>(post);
+            var response = new Response<CreatePostResponse>(postResponse);
 
-            return CreatedAtAction(nameof(GetById), postResponse);
+            return Created(_uriService.GetPostUri(postResponse.Id.ToString()), response);
         }
 
         [HttpPut(ApiRoutes.Posts.Update)]
@@ -101,7 +111,7 @@ namespace Tweetbook.Controllers.V1
             {
                 var responsePost = _mapper.Map<UpdatePostSuccessResponse>(post);
 
-                return Ok(responsePost);
+                return Ok(new Response<UpdatePostSuccessResponse>(responsePost));
             }
 
             return NotFound();
