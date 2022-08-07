@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Tweetbook.Contracts.Contracts.V1.Requests;
 using Tweetbook.Contracts.V1;
 using Tweetbook.Contracts.V1.Requests;
 using Tweetbook.Contracts.V1.Responses;
@@ -34,6 +35,19 @@ namespace Tweetbook.Controllers.V1
         public async Task<IActionResult> Login([FromBody] UserLoginRequest request)
         {
             var res = await _identityService.LoginAsync(request.Email, request.Password);
+
+            if (!res.Success)
+            {
+                return BadRequest(new AuthFailedResponse { Errors = res.Errors });
+            }
+
+            return Ok(new AuthSuccessResponse { Token = res.Token, RefreshToken = res.RefreshToken });
+        }
+
+        [HttpPost(ApiRoutes.Identity.FacebookAuth)]
+        public async Task<IActionResult> LoginWithFacebook([FromBody] UserFacebookAuthRequest request)
+        {
+            var res = await _identityService.LoginWithFacebookAsync(request.AccessToken);
 
             if (!res.Success)
             {

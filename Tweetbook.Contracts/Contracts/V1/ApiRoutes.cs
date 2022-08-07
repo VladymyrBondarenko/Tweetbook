@@ -27,6 +27,8 @@
 
             public const string Login = $"{BaseUrl}/identity/login";
 
+            public const string FacebookAuth = BaseUrl + "/identity/auth/fb";
+
             public const string Refresh = $"{BaseUrl}/identity/refresh";
         }
 

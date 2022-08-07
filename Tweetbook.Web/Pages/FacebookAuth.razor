@@ -1,0 +1,21 @@
+﻿@page "/facebookauth"
+@inject NavigationManager navigateManager
+
+<h3>FacebookAuth</h3>
+
+<h3>Access token: @AccessToken</h3>
+
+@code {
+
+    public string? AccessToken { get; set; }
+
+    protected override Task OnInitializedAsync()
+    {
+        if(QueryHelpers.ParseQuery(navigateManager.Uri.Split('#')[1]).TryGetValue("access_token", out var accessToken))
+        {
+            AccessToken = accessToken;
+        }
+
+        return base.OnInitializedAsync();
+    }
+}

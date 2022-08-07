@@ -21,7 +21,7 @@ namespace Tweetbook.IntegrationTests
     public class IntegrationTest : IDisposable
     {
         protected readonly HttpClient HttpClient;
-        private readonly IServiceProvider _serviceProvider;
+        public readonly IServiceProvider _serviceProvider;
 
         protected IntegrationTest()
         {

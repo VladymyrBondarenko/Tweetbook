@@ -15,15 +15,18 @@ namespace Tweetbook.Services
         private readonly JwtSettingsOptions _jwtSettings;
         private readonly TokenValidationParameters _tokenParams;
         private readonly DataContext _dataContext;
+        private readonly IFacebookAuthService _facebookAuthService;
 
         public IdentityService(
             UserManager<IdentityUser> userManager, JwtSettingsOptions jwtSettings,
-            TokenValidationParameters tokenParams, DataContext dataContext)
+            TokenValidationParameters tokenParams, DataContext dataContext,
+            IFacebookAuthService facebookAuthService)
         {
             _userManager = userManager;
             _jwtSettings = jwtSettings;
             _tokenParams = tokenParams;
             _dataContext = dataContext;
+            _facebookAuthService = facebookAuthService;
         }
 
         public async Task<AuthenticationResult> RegisterAsync(string email, string password)
@@ -75,6 +78,38 @@ namespace Tweetbook.Services
                 {
                     Errors = new [] { "Password is not correct." }
                 };
+            }
+
+            return await generateAuthResultAsync(user);
+        }
+
+        public async Task<AuthenticationResult> LoginWithFacebookAsync(string accessToken)
+        {
+            var validationResult = await _facebookAuthService.ValidateAccessTokenAsync(accessToken);
+
+            if (!validationResult.Data.IsValid)
+            {
+                return new AuthenticationResult { Errors = new[] { validationResult.Data.Error.Message } };
+            }
+
+            var userInfo = await _facebookAuthService.GetUserInfo(accessToken);
+
+            var user = await _userManager.FindByEmailAsync(userInfo.Email);
+
+            if(user == null)
+            {
+                user = new IdentityUser
+                {
+                    Email = userInfo.Email,
+                    UserName = userInfo.Email
+                };
+
+                var identityResult = await _userManager.CreateAsync(user);
+
+                if (!identityResult.Succeeded)
+                {
+                    return new AuthenticationResult { Errors = identityResult.Errors.Select(x => x.Description) };
+                }
             }
 
             return await generateAuthResultAsync(user);

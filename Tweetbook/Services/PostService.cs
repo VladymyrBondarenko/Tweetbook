@@ -15,7 +15,7 @@ namespace Tweetbook.Services
 
         public async Task<List<Post>> GetAllAsync(PaginationQuery paginationFilter = null)
         {
-            if(paginationFilter == null)
+            if(paginationFilter == null || (paginationFilter.PageSize == 0 && paginationFilter.PageNumber == 0))
             {
                 return await _dataContext.Posts.Include(x => x.Tags).ToListAsync();
             }
