@@ -27,7 +27,7 @@ namespace Tweetbook.Services
 
         public async Task<FacebookTokenValidationResult> ValidateAccessTokenAsync(string accessToken)
         {
-            var formattedUrl = _facebookGraphSettings.ApiBaseUrl + string.Format(
+            var formattedUrl = string.Format(
                 TokenValidationUrl, accessToken, _facebookAuthSettings.AppId, _facebookAuthSettings.AppSecret);
 
             var result = await _httpClientFactory.CreateClient(_facebookGraphSettings.ClientName).GetAsync(formattedUrl);
@@ -40,7 +40,7 @@ namespace Tweetbook.Services
 
         public async Task<FacebookUserInfoResult> GetUserInfo(string accessToken)
         {
-            var formattedUrl = _facebookGraphSettings.ApiBaseUrl + string.Format(UserInfoUrl, accessToken);
+            var formattedUrl = string.Format(UserInfoUrl, accessToken);
 
             var result = await _httpClientFactory.CreateClient(_facebookGraphSettings.ClientName).GetAsync(formattedUrl);
             result.EnsureSuccessStatusCode();

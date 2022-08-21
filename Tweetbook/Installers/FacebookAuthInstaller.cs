@@ -15,7 +15,10 @@ namespace Tweetbook.Installers
             configuration.GetSection(nameof(FacebookGraphSettingsOptions)).Bind(facebookGraphSettings);
             services.AddSingleton(facebookGraphSettings);
 
-            services.AddHttpClient("GraphFacebook");
+            services.AddHttpClient(facebookGraphSettings.ClientName, config => 
+            { 
+                config.BaseAddress = new Uri(facebookGraphSettings.ApiBaseUrl); 
+            });
             services.AddScoped<IFacebookAuthService, FacebookAuthService>();
         }
     }
